@@ -49,7 +49,7 @@ class Menu extends React.Component {
           {items.map((item, index) => (
             <MenuItem
               key={index}
-              icon={item.Ionicons}
+              icon={item.icon}
               title={item.title}
               text={item.text}
             />
