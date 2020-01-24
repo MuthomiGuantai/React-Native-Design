@@ -10,6 +10,7 @@ import Success from "./Success";
 import Loading from "./Loading";
 import { Alert, Animated, Dimensions } from "react-native";
 import { connect } from "react-redux";
+import firebase from "./Firebase";
 
 const screenHeight = Dimensions.get("window").height;
 
@@ -72,31 +73,51 @@ class ModalLogin extends React.Component {
 
     this.setState({ isLoading: true });
 
-    setTimeout(() => {
-      this.setState({ isLoading: false });
-      this.setState({ isSuccessful: true });
-    }, 2000);
-  };
+    const email = this.state.email;
+    const password = this.state.password;
 
-  focusEmail = () => {
-    this.setState({
-      iconEmail: require("../assets/icon-email-animated.gif"),
-      IconPassword: require("../assets/icon-password.png")
-    });
-  };
+    firebase
+      .auth()
+      .signInWithEmailAndPassword(email, password)
+      .catch(function(error) {
+        Alert.alert("Error", error.message);
+      })
+      .then(response => {
+        console.log(response);
 
-  focusPassword = () => {
-    this.setState({
-      iconEmail: require("../assets/icon-email.png"),
-      IconPassword: require("../assets/icon-password-animated.gif")
-    });
-  };
+        this.setState({ isLoading: false });
 
-  tapBackground = () => {
-    Keyboard.dismiss();
-    this.props.closeLogin();
-  };
+        if (response) {
+          this.setState({ isSuccessful: true });
 
+          Alert.alert("Congrats", "You've logged successfully!");
+
+          setTimeout(() => {
+            this.props.closeLogin();
+            this.setState({ isSuccessful: false });
+          }, 1000);
+        }
+      });
+
+    focusEmail = () => {
+      this.setState({
+        iconEmail: require("../assets/icon-email-animated.gif"),
+        IconPassword: require("../assets/icon-password.png")
+      });
+    };
+
+    focusPassword = () => {
+      this.setState({
+        iconEmail: require("../assets/icon-email.png"),
+        IconPassword: require("../assets/icon-password-animated.gif")
+      });
+    };
+
+    tapBackground = () => {
+      Keyboard.dismiss();
+      this.props.closeLogin();
+    };
+  };
   render() {
     return (
       <AnimatedContainer style={{ top: this.state.top }}>
