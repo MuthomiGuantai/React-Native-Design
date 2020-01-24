@@ -1,8 +1,43 @@
 import React from "react";
 import styled from "styled-components";
-import { Animated, TouchableOpacity, Dimensions } from "react-native";
+import {
+  AsyncStorage,
+  Animated,
+  TouchableOpacity,
+  Dimensions
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import MenuItem from "./MenuItem";
+import { connect } from "react-redux";
+
+const screenWidth = Dimensions.get("window").width;
+var cardWidth = screenWidth;
+if (screenWidth > 500) {
+  cardWidth = 500;
+}
+
+function mapStateToProps(state) {
+  return { action: state.action };
+}
+
+function mapDispatchToProps(dispatch) {
+  return {
+    closeMenu: () =>
+      dispatch({
+        type: "CLOSE_MENU"
+      }),
+    updateName: name =>
+      dispatch({
+        type: "UPDATE_NAME",
+        name
+      }),
+    updateAvatar: avatar =>
+      dispatch({
+        type: "UPDATE_AVATAR",
+        avatar
+      })
+  };
+}
 
 const screenHeight = Dimensions.get("window").height;
 
@@ -12,15 +47,36 @@ class Menu extends React.Component {
   };
 
   componentDidMount() {
-    Animated.spring(this.state.top, {
-      toValue: 0
-    }).start();
+    this.toggleMenu();
+  }
+
+  componentDidUpdate() {
+    this.toggleMenu();
   }
 
   toggleMenu = () => {
-    Animated.spring(this.state.top, {
-      toValue: screenHeight
-    }).start();
+    if (this.props.action == "openMenu") {
+      Animated.spring(this.state.top, {
+        toValue: 54
+      }).start();
+    }
+
+    if (this.props.action == "closeMenu") {
+      Animated.spring(this.state.top, {
+        toValue: screenHeight
+      }).start();
+    }
+  };
+
+  handleMenu = index => {
+    if (index === 3) {
+      this.props.closeMenu();
+      this.props.updateName("Stranger");
+      this.props.updateAvatar(
+        "https://cl.ly/55da82beb939/download/avatar-default.jpg"
+      );
+      AsyncStorage.clear();
+    }
   };
 
   render() {
@@ -32,7 +88,7 @@ class Menu extends React.Component {
           <Subtitle>Designer at Design+Code</Subtitle>
         </Cover>
         <TouchableOpacity
-          onPress={this.toggleMenu}
+          onPress={this.props.closeMenu}
           style={{
             position: "absolute",
             top: 120,
@@ -47,12 +103,14 @@ class Menu extends React.Component {
         </TouchableOpacity>
         <Content>
           {items.map((item, index) => (
-            <MenuItem
+            <TouchableOpacity
               key={index}
-              icon={item.icon}
-              title={item.title}
-              text={item.text}
-            />
+              onPress={() => {
+                this.handleMenu(index);
+              }}
+            >
+              <MenuItem icon={item.icon} title={item.title} text={item.text} />
+            </TouchableOpacity>
           ))}
         </Content>
       </AnimatedContainer>
@@ -60,7 +118,7 @@ class Menu extends React.Component {
   }
 }
 
-export default Menu;
+export default connect(mapStateToProps, mapDispatchToProps)(Menu);
 
 const Image = styled.Image`
   position: absolute;
@@ -93,9 +151,12 @@ const CloseView = styled.View`
 const Container = styled.View`
   position: absolute;
   background: white;
-  width: 100%;
+  width: ${cardWidth};
+  align-self: center;
   height: 100%;
   z-index: 100;
+  border-radius: 10px;
+  overflow: hidden;
 `;
 
 const AnimatedContainer = Animated.createAnimatedComponent(Container);

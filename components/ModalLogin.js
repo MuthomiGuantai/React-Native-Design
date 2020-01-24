@@ -11,6 +11,7 @@ import Loading from "./Loading";
 import { Alert, Animated, Dimensions } from "react-native";
 import { connect } from "react-redux";
 import firebase from "./Firebase";
+import { AsyncStorage } from "react-native";
 
 const screenHeight = Dimensions.get("window").height;
 
@@ -23,6 +24,16 @@ function mapDispatchToProps(dispatch) {
     closeLogin: () =>
       dispatch({
         type: "CLOSE_LOGIN"
+      }),
+    updateName: name =>
+      dispatch({
+        type: "UPDATE_NAME",
+        name
+      }),
+    updateAvatar: avatar =>
+      dispatch({
+        type: "UPDATE_AVATAR",
+        avatar
       })
   };
 }
@@ -38,6 +49,9 @@ class ModalLogin extends React.Component {
     scale: new Animated.Value(1.3),
     translateY: new Animated.Value(0)
   };
+  componentDidMount() {
+    this.retrieveName();
+  }
 
   componentDidUpdate() {
     if (this.props.action === "openLogin") {
@@ -67,9 +81,24 @@ class ModalLogin extends React.Component {
       }).start();
     }
   }
+  storeName = async name => {
+    try {
+      await AsyncStorage.setItem("name", name);
+    } catch (error) {}
+  };
+
+  retrieveName = async () => {
+    try {
+      const name = await AsyncStorage.getItem("name");
+      if (name !== null) {
+        console.log(name);
+        this.props.updateName(name);
+      }
+    } catch (error) {}
+  };
 
   handleLogin = () => {
-    console.log(this.state.email, this.state.password);
+    //console.log(this.state.email, this.state.password);
 
     this.setState({ isLoading: true });
 
@@ -83,7 +112,7 @@ class ModalLogin extends React.Component {
         Alert.alert("Error", error.message);
       })
       .then(response => {
-        console.log(response);
+        //console.log(response);
 
         this.setState({ isLoading: false });
 
@@ -92,12 +121,31 @@ class ModalLogin extends React.Component {
 
           Alert.alert("Congrats", "You've logged successfully!");
 
+          //this.storeName(response.user.email);
+          this.fetchUser();
+          this.props.updateName(response.user.email);
+
           setTimeout(() => {
             this.props.closeLogin();
             this.setState({ isSuccessful: false });
           }, 1000);
         }
       });
+    fetchUser = () => {
+      fetch("https://uifaces.co/api?limit=1&random", {
+        headers: new Headers({
+          "X-API-KEY": "eeaafbe81657073cd70ac6e3de1bd6"
+        })
+      })
+        .then(response => response.json())
+        .then(response => {
+          const name = response[0].name;
+          const avatar = response[0].photo;
+          saveState({ name, avatar });
+          this.props.updateName(name);
+          this.props.updateAvatar(avatar);
+        });
+    };
 
     focusEmail = () => {
       this.setState({

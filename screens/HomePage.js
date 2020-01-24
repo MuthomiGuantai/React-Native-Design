@@ -135,7 +135,7 @@ class HomeScreen extends React.Component {
             <ScrollView style={{ height: "100%" }}>
               <TitleBar>
                 <TouchableOpacity
-                  onPress={this.props.openLogin}
+                  onPress={this.handleAvatar}
                   style={{ position: "absolute", top: 0, left: 20 }}
                 >
                   <Avatar source={require("../assets/avatar.jpg")} />
@@ -171,7 +171,7 @@ class HomeScreen extends React.Component {
                     if (loading) return <Message>Loading...</Message>;
                     if (error) return <Message>Error...</Message>;
 
-                    console.log(data.cardsCollection.items);
+                    //console.log(data.cardsCollection.items);
 
                     return (
                       <CardsContainer>
